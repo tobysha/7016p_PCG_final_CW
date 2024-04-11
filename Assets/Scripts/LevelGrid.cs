@@ -16,6 +16,8 @@ public class LevelGrid : MonoBehaviour
     public int[,] initialGrid;
     private int[,] finalLevel;
 
+
+
     private AgentLocationGenerator ag;
     void Awake()
     {
@@ -34,6 +36,7 @@ public class LevelGrid : MonoBehaviour
         MeshGenerator meshGen = GetComponent<MeshGenerator>();
         meshGen.GenerateMesh(finalLevel, 1);
         ag.AgentsGenerate();
+ 
     }
     void GenerateInitialGrid()
     {

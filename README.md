@@ -1,5 +1,8 @@
 # 7016p_PCG_final_CW
 
+# video link
+https://youtu.be/yGf0JSfYXGg
+
 # How to run
 After press the start button, click the button at bottom left "Generate", it will generate map and agents, Which include a white background, brown walls, green Thiefs, pink Diamonds and gray Trolls.
 It can be pressed many times, which will delete the Objects and map last time and generate a new combine.
@@ -55,3 +58,6 @@ speed: 8f
 # Diamonds
 Color: Pink
 Each part of map generate 4 diamons.
+
+# Some explaination of error
+These errors do not cause errors in level generation, only errors due to the object being destroyed.
