@@ -61,3 +61,6 @@ Each part of map generate 4 diamons.
 
 # Some explaination of error
 These errors do not cause errors in level generation, only errors due to the object being destroyed.
+
+# testMode
+I have added test Logic to prefab of thief and troll, when using, just need to active the code call "test_xxxx" and delete others.
