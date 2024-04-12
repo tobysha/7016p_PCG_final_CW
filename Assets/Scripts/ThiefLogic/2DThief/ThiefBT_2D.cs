@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UIElements.Experimental;
 
 public class ThiefBT_2D : MonoBehaviour
 {
@@ -23,7 +24,7 @@ public class ThiefBT_2D : MonoBehaviour
 
     private float[] troll_distance;
     private float[] diamond_distance;
-    private float items_detect_distance = 50f;
+    private float items_detect_distance = 30f;
 
     //RayAngle
     private float raycastAngle = 45f;
@@ -59,7 +60,11 @@ public class ThiefBT_2D : MonoBehaviour
     }
     private void Update()
     {
+        DrawFieldOfView();
         updateScores();
+        MapScan();
+        DiamondLocation();
+        TrollLocation();
         int maxValue = utilityScores.Max(t => t);
         int maxIndex = utilityScores.IndexOf(maxValue);
 
@@ -69,8 +74,7 @@ public class ThiefBT_2D : MonoBehaviour
             SwitchTree(SelectBehaviourTree(currentAction));
             //Debug.Log(currentAction);
         }
-        DrawFieldOfView();
-        MapScan();
+        
     }
     void DrawFieldOfView()
     {
@@ -87,7 +91,7 @@ public class ThiefBT_2D : MonoBehaviour
             {
                 if (hitInfo.collider.CompareTag("Troll"))
                 {
-                    if(!troll_Targets.Contains(hitInfo.collider.gameObject))
+                    if (!troll_Targets.Contains(hitInfo.collider.gameObject))
                     {
                         troll_Targets.Add(hitInfo.collider.gameObject);
                     }
@@ -123,36 +127,14 @@ public class ThiefBT_2D : MonoBehaviour
         {
             for (int i = 0; i < troll_Targets.Count; i++)
             {
-                if (!troll_Targets[i].activeSelf)
-                {
-                    troll_Targets.Remove(troll_Targets[i]);
-                    continue;
-                }
                 troll_distance[i] = Distance_calculate(troll_Targets[i]);
-                if (troll_distance[i] == 0f && troll_Targets[i] != null)
-                {
-                    troll_Targets.Remove(troll_Targets[i]);
-                }
-                if(troll_distance[i] > 20f && troll_Targets[i]!= null)
-                {
-                    troll_Targets.Remove(troll_Targets[i]);
-                }
             }
         }
         if (diamond_Targets.Count != 0)
         {
             for (int i = 0; i < diamond_Targets.Count; i++)
             {
-                if (!diamond_Targets[i].activeSelf)
-                {
-                    diamond_Targets.Remove(diamond_Targets[i]);
-                    continue;
-                }
                 diamond_distance[i] = Distance_calculate(diamond_Targets[i]);
-                if (diamond_distance[i] == 0f && diamond_Targets[i] != null)
-                {
-                    diamond_Targets.Remove(diamond_Targets[i]);
-                }
             }
         }
     }
@@ -191,7 +173,7 @@ public class ThiefBT_2D : MonoBehaviour
     private void WallHittingAvoid()
     {
         RaycastHit2D FrontHit = new RaycastHit2D();
-        Vector2 rayOrigin = transform.position + transform.right * 0.8f;
+        Vector2 rayOrigin = transform.position + transform.right * 1f;
         FrontHit = Physics2D.Raycast(rayOrigin, transform.right, 0.3f);
         if (FrontHit.collider != null && (FrontHit.collider.CompareTag("Wall")|| FrontHit.collider.CompareTag("Thief")))
         {
@@ -206,8 +188,42 @@ public class ThiefBT_2D : MonoBehaviour
     {
 
         utilityScores[IDLE] = 10;
+        ObjectsStateUpdate();
         ObjectsUpdate();
         WallHittingAvoid();
+    }
+    private void ObjectsStateUpdate()
+    {
+        List<GameObject> toRemove = new List<GameObject>();
+
+        foreach (GameObject diamond in diamond_Targets)
+        {
+            if (diamond != null && !diamond.activeSelf)
+            {
+                toRemove.Add(diamond);
+            }
+        }
+
+        foreach (GameObject obj in toRemove)
+        {
+            diamond_Targets.Remove(obj);
+        }
+
+        toRemove.Clear();
+
+        foreach (GameObject troll in troll_Targets)
+        {
+            if (troll != null && !troll.activeSelf)
+            {
+                toRemove.Add(troll);
+            }
+        }
+
+        foreach (GameObject obj in toRemove)
+        {
+            troll_Targets.Remove(obj);
+        }
+
     }
 
     private void SwitchTree(Root t)
@@ -288,11 +304,11 @@ public class ThiefBT_2D : MonoBehaviour
             blackboard["WallonRight"] = false;
         }
         //FrontHit = Physics2D.Raycast(rayOrigin, transform.right, directDistance);
-        //if (FrontHit.collider != null && FrontHit.collider.CompareTag("Diamond")&& !diamond_Targets.Contains(FrontHit.collider.gameObject))
+        //if (FrontHit.collider != null && FrontHit.collider.CompareTag("Diamond") && !diamond_Targets.Contains(FrontHit.collider.gameObject))
         //{
         //    diamond_Targets.Add(FrontHit.collider.gameObject);
         //}
-        //else if (FrontHit.collider != null && FrontHit.collider.CompareTag("Troll")&& !troll_Targets.Contains(FrontHit.collider.gameObject))
+        //else if (FrontHit.collider != null && FrontHit.collider.CompareTag("Troll") && !troll_Targets.Contains(FrontHit.collider.gameObject))
         //{
         //    troll_Targets.Add(FrontHit.collider.gameObject);
         //}
@@ -317,7 +333,8 @@ public class ThiefBT_2D : MonoBehaviour
         if (troll_Targets.Count != 0)
         {
             int Close_Troll = System.Array.IndexOf(troll_distance, Mathf.Min(troll_distance));
-            if (Close_Troll < diamond_Targets.Count)
+
+            if (Close_Troll >= 0 && Close_Troll < troll_Targets.Count)
             {
                 Vector2 targetPos = troll_Targets[Close_Troll].gameObject.transform.position;
                 Vector2 localPos = this.transform.InverseTransformPoint(targetPos);
@@ -327,22 +344,39 @@ public class ThiefBT_2D : MonoBehaviour
                 blackboard["targetOnRight"] = heading.y > 0;
                 blackboard["targetOffCentre"] = Mathf.Abs(heading.x);
             }
+            else
+            {
+                blackboard["targetDistance"] = 0f;
+                blackboard["targetInFront"] = false;
+                blackboard["targetOnRight"] = false;
+                blackboard["targetOffCentre"] = 0f;
+            }
+
+
         }
     }
     private void DiamondLocation()
     {
         if (diamond_Targets.Count != 0)
         {
+
             int Close_Diamond = System.Array.IndexOf(diamond_distance, Mathf.Min(diamond_distance));
-            if (Close_Diamond < diamond_Targets.Count)
+            if (Close_Diamond>=0 && Close_Diamond < diamond_Targets.Count)
             {
                 Vector2 targetPos = diamond_Targets[Close_Diamond].gameObject.transform.position;
                 Vector2 localPos = this.transform.InverseTransformPoint(targetPos);
                 Vector2 heading = localPos.normalized;
-                blackboard["targetDistance"] = localPos.magnitude;
-                blackboard["targetInFront"] = heading.x > 0;
-                blackboard["targetOnRight"] = heading.y > 0;
-                blackboard["targetOffCentre"] = Mathf.Abs(heading.x);
+                blackboard["Distance"] = localPos.magnitude;
+                blackboard["DiamondInFront"] = heading.x > 0;
+                blackboard["DiamondOnRight"] = heading.y > 0;
+                blackboard["DiamondOffCentre"] = Mathf.Abs(heading.x);
+            }
+            else
+            {
+                blackboard["Distance"] = 0f;
+                blackboard["DiamondInFront"] = false;
+                blackboard["DiamondOnRight"] = false;
+                blackboard["DiamondOffCentre"] = 0f;
             }
         }
     }
@@ -366,17 +400,17 @@ public class ThiefBT_2D : MonoBehaviour
     // Just turn slowly
     private Root Scaning()
     {
-        return new Root(new Service(0.1f, () => { MapScan(); },
+        return new Root(
                     new Sequence(
                         new Action(() => ChangeObjectColor(Color.green)),
-        //new Action(() => Move(0f)),
+        //  new Action(() => Move(0f)),
                         DirectionSeleter(),
                         new Wait(0.2f),
                         new Action(() => Turn(0f)),
                         new Action(() => Move(0.3f))
                     //new Wait(2.0f)
                     )
-                    )
+                    
                 );
     }
     private Selector DirectionSeleter()
@@ -415,38 +449,39 @@ public class ThiefBT_2D : MonoBehaviour
 
     private Root TrackingTarget()
     {
-        return new Root(new Service(0.1f, () => { DiamondLocation(); }, 
+        return new Root(
             new Sequence(
                 new Action(() => ChangeObjectColor(Color.yellow)),
                     new Selector(
-                        new BlackboardCondition("targetInFront", Operator.IS_EQUAL, true, Stops.LOWER_PRIORITY_IMMEDIATE_RESTART,
+                        new BlackboardCondition("DiamondInFront", Operator.IS_EQUAL, true, Stops.LOWER_PRIORITY_IMMEDIATE_RESTART,
                             new Sequence(
                                 DirectionSeleter(),
                                 new Action(() => Move(0.5f)),
                                 new Selector(
-                                    new BlackboardCondition("targetOnRight", Operator.IS_EQUAL, false, Stops.SELF,
+                                    new BlackboardCondition("DiamondOnRight", Operator.IS_EQUAL, false, Stops.SELF,
                                     new Sequence(RandomturnLeft())
                                     ),
-                                    new BlackboardCondition("targetOnRight", Operator.IS_EQUAL, true, Stops.SELF,
+                                    new BlackboardCondition("DiamondOnRight", Operator.IS_EQUAL, true, Stops.SELF,
                                     new Sequence(RandomturnRight())
                                     )
                                 )
                             )
                         ),
-                        new BlackboardCondition("targetInFront", Operator.IS_EQUAL, false, Stops.LOWER_PRIORITY_IMMEDIATE_RESTART,
+                        new BlackboardCondition("DiamondInFront", Operator.IS_EQUAL, false, Stops.LOWER_PRIORITY_IMMEDIATE_RESTART,
                             new Sequence(
                                 new Action(() => TurnAround())
                             )
                         )
+
                     )
-                    
-                )
+
+                
             )
         );
     }
     private Root RunAway()
     {
-        return new Root(new Service(0.1f, () => { TrollLocation(); },
+        return new Root(
     new Sequence(
         new Action(() => ChangeObjectColor(Color.red)),
             new Selector(
@@ -461,13 +496,12 @@ public class ThiefBT_2D : MonoBehaviour
                 ),
                 new BlackboardCondition("targetInFront", Operator.IS_EQUAL, true, Stops.LOWER_PRIORITY_IMMEDIATE_RESTART,
                     new Sequence(
-                    new Action(() => Turn(1f)),
-                    new Wait(0.5f)
+                    new Action(() => TurnAround())
                 )
-                
 
-            
-                )
+
+
+                
             )
         )
     )
@@ -489,6 +523,13 @@ public class ThiefBT_2D : MonoBehaviour
         if (collision.collider.CompareTag("Troll"))
         {
             gameObject.SetActive(false);
+        }
+        if (collision.collider.CompareTag("Diamond"))
+        {
+            if (diamond_Targets.Contains(collision.collider.gameObject))
+            {
+                diamond_Targets.Remove(collision.collider.gameObject);
+            }
         }
     }
 

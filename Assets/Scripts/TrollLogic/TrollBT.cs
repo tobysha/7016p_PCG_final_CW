@@ -108,20 +108,7 @@ public class TrollBT : MonoBehaviour
         {
             for (int i = 0; i < Thief_Targets.Count; i++)
             {
-                if (!Thief_Targets[i].activeSelf)
-                {
-                    Thief_Targets.Remove(Thief_Targets[i]);
-                    continue;
-                }
                 thief_distance[i] = Distance_calculate(Thief_Targets[i]);
-                if (thief_distance[i] == 0f && Thief_Targets[i]!=null)
-                {
-                    Thief_Targets.Remove(Thief_Targets[i]);
-                }
-                if (thief_distance[i] > 20f && Thief_Targets[i] != null)
-                {
-                    Thief_Targets.Remove(Thief_Targets[i]);
-                }
             }
         }
     }
@@ -160,10 +147,29 @@ public class TrollBT : MonoBehaviour
             utilityScores[WallHitting] = 0;
         }
     }
+    private void ObjectsStateUpdate()
+    {
+        List<GameObject> toRemove = new List<GameObject>();
+
+        foreach (GameObject thief in Thief_Targets)
+        {
+            if (thief != null && !thief.activeSelf)
+            {
+                toRemove.Add(thief);
+            }
+        }
+
+        foreach (GameObject obj in toRemove)
+        {
+            Thief_Targets.Remove(obj);
+        }
+
+    }
     private void updateScores()
     {
 
         utilityScores[IDLE] = 10;
+        ObjectsStateUpdate();
         ObjectsUpdate();
         WallHittingAvoid();
         //Debug.Log("youzaipao");
