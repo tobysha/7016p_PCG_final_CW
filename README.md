@@ -26,6 +26,7 @@ PostProcessGrid() Expanded the grid and increased the thickness of the edge wall
  # Thief(square)
 speed: 12f
 (speed during Collecting and Running will be faster)
+Use rays to detect the movement of the wall at a 45 degree Angle, use 360 limited range rays to detect surrounding objects or enemies, and use extremely short rays directly in front of the wall to prevent objects from getting stuck in the wall (there is still a small chance of getting stuck in the wall).
 
  State:(Color)
  1.Idle: Search the entire map for diamonds and trolls and avoid walls.(Green)
@@ -43,6 +44,7 @@ speed: 12f
  # Troll
 speed: 8f
 (Speed during Chasing will be faster)
+Use rays to detect the movement of the wall at a 45 degree Angle, use 360 limited range rays to detect surrounding objects or enemies, and use extremely short rays directly in front of the wall to prevent objects from getting stuck in the wall (there is still a small chance of getting stuck in the wall).
 
  State(Color):
  1.Idle: Search the entire map for thiefs and avoid walls.(gray)
